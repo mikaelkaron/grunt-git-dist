@@ -56,7 +56,7 @@ module.exports = function(grunt) {
 
 				grunt.util.spawn({
 					"cmd" : "git",
-					"args" : [ "clone", "--branch=" + options[BRANCH], options[URL], options[DIR] ]
+					"args" : [ "clone", "--no-checkout", "--single-branch", "--branch=" + options[BRANCH], options[URL], options[DIR] ]
 				}, doneFunction);
 				break;
 
@@ -90,13 +90,28 @@ module.exports = function(grunt) {
 			case "commit" :
 				requiresOptions(DIR);
 
-				grunt.util.spawn({
-					"cmd" : "git",
-					"args" : [ "commit", "--all", "--no-edit", MESSAGE in options ? "--message=" + options[MESSAGE] : "--allow-empty-message" ],
-					"opts" : {
-						"cwd" : options[DIR]
+				grunt.util.async.series([
+					function (callback) {
+						grunt.util.spawn({
+							"cmd" : "git",
+							"args" : [ "add", "--all" ],
+							"opts" : {
+								"cwd" : options[DIR]
+							}
+						}, callback);
+					},
+					function (callback) {
+						grunt.util.spawn({
+							"cmd" : "git",
+							"args" : [ "commit", "--no-edit", MESSAGE in options ? "--message=" + options[MESSAGE] : "--allow-empty-message" ],
+							"opts" : {
+								"cwd" : options[DIR]
+							}
+						}, callback);
 					}
-				}, doneFunction);
+				], function (err, results) {
+					doneFunction(err, results.join("\n"));
+				});
 				break;
 
 			case "push" :
