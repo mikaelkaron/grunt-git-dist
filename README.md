@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/mikaelkaron/grunt-git-dist.png)](https://travis-ci.org/mikaelkaron/grunt-git-dist)
+
 # grunt-git-dist
 
 > Release using git
