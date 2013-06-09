@@ -41,7 +41,7 @@ grunt.initConfig({
 })
 ```
 
-> Note that since this is a [multi-task](http://gruntjs.com/creating-tasks#multi-tasks) you have to have at least one target defined for `json-replace` (otherwise the task won't run)
+> Note that since this is a [multi-task](http://gruntjs.com/creating-tasks#multi-tasks) you have to have at least one target defined for `git-dist` (otherwise the task won't run)
 
 ### Options
 
