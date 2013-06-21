@@ -28,11 +28,13 @@ In your project's Gruntfile, add a section named `git-dist` to the data object p
 grunt.initConfig({
   "git-dist" : {
     "options" : {
+      "url" : "<%= pkg.repository.url %>",
       "branch" : "build/2.x",
       "dir" : "<%= build.dist %>",
       "message" : "<%= pkg.name %> - <%= pkg.version %>",
       "name" : "<%= pkg.author.name %>",
-      "email" : "<%= pkg.author.email %>"
+      "email" : "<%= pkg.author.email %>",
+      "empty" : true
     },
     "your_target": {
       // Target-specific file lists and/or options go here.
@@ -81,10 +83,17 @@ Default value: `undefined`
 
 A string value that is used as the committer email.
 
+#### options.empty
+Type: `Boolean`  
+Default value: `undefined`
+
+A boolean value that is used to allow empty commits.
+
 ## Contributing
 In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
 
 ## Release History
+0.2.2 - Added support for `empty`  
 0.2.1 - Realized that we can support URL, so added it back  
 0.2.0 - Remove support for URL as we always clone the local repository  
 0.1.1 - Fix so deleted files are tracked  
