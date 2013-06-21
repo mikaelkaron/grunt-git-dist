@@ -6,12 +6,10 @@
  * Licensed under the MIT license.
  */
 
-'use strict';
-
 module.exports = function(grunt) {
+	"use strict";
 
 	var ARRAY_FOREACH = Array.prototype.forEach;
-	var URL = "url";
 	var BRANCH = "branch";
 	var DIR = "dir";
 	var MESSAGE = "message";
@@ -21,13 +19,29 @@ module.exports = function(grunt) {
 	grunt.task.registerMultiTask("git-dist", "Release using git", function (phase) {
 		var done = this.async();
 		var options = this.options();
+		var series = [];
 
-		function doneFunction (err, result) {
+		function doneFunction (err, results) {
+			var message = results
+				.filter(function (result) {
+					return err ? result[1] !== 0 : result[1] === 0;
+				})
+				.map(function (result) {
+					result = result[0];
+					result = result.stdout || result.stderr || result;
+					result = result.toString();
+
+					return err
+						? result.replace("\n", " - ")
+						: result;
+				})
+				.join("\n");
+
 			if (err) {
-				grunt.fail.warn(err);
+				grunt.fail.warn(message);
 			}
 
-			grunt.log.ok(result);
+			grunt.log.ok(message);
 
 			done(true);
 		}
@@ -52,78 +66,100 @@ module.exports = function(grunt) {
 
 		switch (phase) {
 			case "clone" :
-				requiresOptions(URL, BRANCH, DIR);
+				requiresOptions(BRANCH, DIR);
 
-				grunt.util.spawn({
-					"cmd" : "git",
-					"args" : [ "clone", "--no-checkout", "--single-branch", "--branch=" + options[BRANCH], options[URL], options[DIR] ]
-				}, doneFunction);
+				series.push(function (callback) {
+					grunt.util.spawn({
+						"cmd" : "git",
+						"args" : [ "clone", "--no-checkout", "--single-branch", "--branch", options[BRANCH], ".", options[DIR] ]
+					}, callback);
+				});
+
+				grunt.util.async.series(series, doneFunction);
 				break;
 
 			case "configure" :
-				requiresOptions(NAME, EMAIL);
-
-				grunt.util.async.series([
-					function (callback) {
+				if (NAME in options) {
+					series.push(function (callback) {
 						grunt.util.spawn({
 							"cmd" : "git",
 							"args" : [ "config", "user.name", options[NAME] ],
 							"opts" : {
 								"cwd" : options[DIR]
 							}
-						}, callback);
-					},
-					function  (callback) {
+						}, function (error, result, code) {
+							result = result.toString() || code === 0
+								? "Configured user.name to " + options[NAME]
+								: "Unable to configure user.name to " + options[NAME];
+
+							callback(error, result, code);
+						});
+					});
+				}
+
+				if (EMAIL in options) {
+					series.push(function  (callback) {
 						grunt.util.spawn({
 							"cmd" : "git",
 							"args" : [ "config", "user.email", options[EMAIL] ],
 							"opts" : {
 								"cwd" : options[DIR]
 							}
-						}, callback);
-					}
-				], function (err, results) {
-					doneFunction(err, "Configured user.name '" + options[NAME] + "' and user.email '" + options[EMAIL] + "'");
-				});
+						}, function (error, result, code) {
+							result = result.toString() || code === 0
+								? "Configured user.email to " + options[EMAIL]
+								: "Unable to configure user.email to " + options[EMAIL];
+
+							callback(error, result, code);
+						});
+					});
+				}
+
+				grunt.util.async.series(series, doneFunction);
 				break;
 
 			case "commit" :
 				requiresOptions(DIR);
 
-				grunt.util.async.series([
-					function (callback) {
-						grunt.util.spawn({
-							"cmd" : "git",
-							"args" : [ "add", "--all" ],
-							"opts" : {
-								"cwd" : options[DIR]
-							}
-						}, callback);
-					},
-					function (callback) {
-						grunt.util.spawn({
-							"cmd" : "git",
-							"args" : [ "commit", "--no-edit", MESSAGE in options ? "--message=" + options[MESSAGE] : "--allow-empty-message" ],
-							"opts" : {
-								"cwd" : options[DIR]
-							}
-						}, callback);
-					}
-				], function (err, results) {
-					doneFunction(err, results.join("\n"));
+				series.push(function (callback) {
+					grunt.util.spawn({
+						"cmd" : "git",
+						"args" : [ "add", "--all" ],
+						"opts" : {
+							"cwd" : options[DIR]
+						}
+					}, callback);
 				});
+
+				series.push(function (callback) {
+					grunt.util.spawn({
+						"cmd" : "git",
+						"args" : MESSAGE in options
+							? [ "commit", "--no-edit", "--message", options[MESSAGE] ]
+							: [ "commit", "--no-edit", "--allow-empty-message" ],
+						"opts" : {
+							"cwd" : options[DIR]
+						}
+					}, callback);
+				});
+
+				grunt.util.async.series(series, doneFunction);
 				break;
 
 			case "push" :
-				requiresOptions(URL, BRANCH, DIR);
+				requiresOptions(DIR);
 
-				grunt.util.spawn({
-					"cmd" : "git",
-					"args" : [ "push", "--quiet", options[URL], options[BRANCH] ],
-					"opts" : {
-						"cwd" : options[DIR]
-					}
-				}, doneFunction);
+				series.push(function (callback) {
+					grunt.util.spawn({
+						"cmd" : "git",
+						"args" : [ "push", "origin" ],
+						"opts" : {
+							"cwd" : options[DIR]
+						}
+					}, callback);
+				});
+
+				grunt.util.async.series(series, doneFunction);
 				break;
 
 			default :
