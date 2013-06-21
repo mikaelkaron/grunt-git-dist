@@ -45,6 +45,12 @@ grunt.initConfig({
 
 ### Options
 
+#### options.url
+Type: `String`  
+Default value: `undefined`
+
+A string value that is used to select what repository to clone. If empty the current repository will be used.
+
 #### options.branch
 Type: `String`  
 Default value: `undefined`
@@ -79,6 +85,7 @@ A string value that is used as the committer email.
 In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
 
 ## Release History
+0.2.1 - Realized that we can support URL, so added it back  
 0.2.0 - Remove support for URL as we always clone the local repository  
 0.1.1 - Fix so deleted files are tracked  
 0.1.0 - Initial release  
