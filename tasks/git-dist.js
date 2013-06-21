@@ -10,6 +10,7 @@ module.exports = function(grunt) {
 	"use strict";
 
 	var ARRAY_FOREACH = Array.prototype.forEach;
+	var URL = "url";
 	var BRANCH = "branch";
 	var DIR = "dir";
 	var MESSAGE = "message";
@@ -71,7 +72,7 @@ module.exports = function(grunt) {
 				series.push(function (callback) {
 					grunt.util.spawn({
 						"cmd" : "git",
-						"args" : [ "clone", "--no-checkout", "--single-branch", "--branch", options[BRANCH], ".", options[DIR] ]
+						"args" : [ "clone", "--no-checkout", "--single-branch", "--branch", options[BRANCH], options[URL] || ".", options[DIR] ]
 					}, callback);
 				});
 
