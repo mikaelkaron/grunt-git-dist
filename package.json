@@ -1,7 +1,7 @@
 {
   "name": "grunt-git-dist",
   "description": "Release using git",
-  "version": "0.2.2-SNAPSHOT",
+  "version": "0.2.2",
   "homepage": "https://github.com/mikaelkaron/grunt-git-dist",
   "author": {
     "name": "Mikael Karon",
