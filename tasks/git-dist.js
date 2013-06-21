@@ -16,6 +16,7 @@ module.exports = function(grunt) {
 	var MESSAGE = "message";
 	var NAME = "name";
 	var EMAIL = "email";
+	var EMPTY = "empty";
 
 	grunt.task.registerMultiTask("git-dist", "Release using git", function (phase) {
 		var done = this.async();
@@ -133,11 +134,22 @@ module.exports = function(grunt) {
 				});
 
 				series.push(function (callback) {
+					var args = [ "commit", "--no-edit" ];
+
+					if (MESSAGE in options) {
+						args.push("--message", options[MESSAGE]);
+					}
+					else {
+						args.push("--allow-empty-message");
+					}
+
+					if (options[EMPTY] === true) {
+						args.push("--allow-empty");
+					}
+
 					grunt.util.spawn({
 						"cmd" : "git",
-						"args" : MESSAGE in options
-							? [ "commit", "--no-edit", "--message", options[MESSAGE] ]
-							: [ "commit", "--no-edit", "--allow-empty-message" ],
+						"args" : args,
 						"opts" : {
 							"cwd" : options[DIR]
 						}
