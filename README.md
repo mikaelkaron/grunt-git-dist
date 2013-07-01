@@ -32,8 +32,10 @@ grunt.initConfig({
       "branch" : "build/2.x",
       "dir" : "<%= build.dist %>",
       "message" : "<%= pkg.name %> - <%= pkg.version %>",
-      "name" : "<%= pkg.author.name %>",
-      "email" : "<%= pkg.author.email %>",
+      "config" : {
+          "user.name" : "<%= pkg.author.name %>",
+          "user.email" : "<%= pkg.author.email %>",
+      },
       "empty" : true
     },
     "your_target": {
@@ -71,11 +73,11 @@ Default value: `undefined`
 
 A string value that is used as a commit message.
 
-#### options.name
-Type: `String`  
+#### options.config
+Type: `Object`
 Default value: `undefined`
 
-A string value that is used as the committer name.
+An object value that is used to configure the clone.
 
 #### options.email
 Type: `String`  
@@ -93,6 +95,7 @@ A boolean value that is used to allow empty commits.
 In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
 
 ## Release History
+0.2.3 - Removed `configure` phase. Instead we configure during clone  
 0.2.2 - Added support for `empty`  
 0.2.1 - Realized that we can support URL, so added it back  
 0.2.0 - Remove support for URL as we always clone the local repository  
