@@ -9,13 +9,13 @@
 module.exports = function(grunt) {
 	"use strict";
 
+	var UNDEFINED;
 	var ARRAY_FOREACH = Array.prototype.forEach;
 	var URL = "url";
 	var BRANCH = "branch";
 	var DIR = "dir";
 	var MESSAGE = "message";
-	var NAME = "name";
-	var EMAIL = "email";
+	var CONFIG = "config";
 	var EMPTY = "empty";
 
 	grunt.task.registerMultiTask("git-dist", "Release using git", function (phase) {
@@ -71,51 +71,43 @@ module.exports = function(grunt) {
 				requiresOptions(BRANCH, DIR);
 
 				series.push(function (callback) {
+					var args = [ "clone", "--quiet", "--no-checkout", "--single-branch", "--recurse-submodules", "--branch", options[BRANCH] ];
+					var url = options[URL] || ".";
+					var dir = options[DIR];
+					var config;
+					var fail;
+
+					if (CONFIG in options) {
+						config = options[CONFIG];
+						fail = false;
+
+						Object.keys(config).forEach(function (key) {
+							var option = "git-dist." + key;
+							var value = grunt.option(option) || config[key];
+
+							if (value === UNDEFINED) {
+								grunt.log.error("'" + option + "' is missing.");
+								fail = true;
+							}
+							else {
+								args.push("--config", key + "=" + value);
+							}
+						});
+
+						if (fail === true) {
+							grunt.fail.warn("Required options missing.");
+						}
+					}
+
+					args.push(url, dir);
+
 					grunt.util.spawn({
 						"cmd" : "git",
-						"args" : [ "clone", "--no-checkout", "--single-branch", "--branch", options[BRANCH], options[URL] || ".", options[DIR] ]
-					}, callback);
+						"args" : args
+					}, function (error, result, code) {
+						callback(error, result.toString() || (code === 0 ? "Cloned '" + url + "' into '" + dir + "'" : "Unable to clone '" + url + "' into '" + dir + "'"), code);
+					});
 				});
-
-				grunt.util.async.series(series, doneFunction);
-				break;
-
-			case "configure" :
-				if (NAME in options) {
-					series.push(function (callback) {
-						grunt.util.spawn({
-							"cmd" : "git",
-							"args" : [ "config", "user.name", options[NAME] ],
-							"opts" : {
-								"cwd" : options[DIR]
-							}
-						}, function (error, result, code) {
-							result = result.toString() || code === 0
-								? "Configured user.name to " + options[NAME]
-								: "Unable to configure user.name to " + options[NAME];
-
-							callback(error, result, code);
-						});
-					});
-				}
-
-				if (EMAIL in options) {
-					series.push(function  (callback) {
-						grunt.util.spawn({
-							"cmd" : "git",
-							"args" : [ "config", "user.email", options[EMAIL] ],
-							"opts" : {
-								"cwd" : options[DIR]
-							}
-						}, function (error, result, code) {
-							result = result.toString() || code === 0
-								? "Configured user.email to " + options[EMAIL]
-								: "Unable to configure user.email to " + options[EMAIL];
-
-							callback(error, result, code);
-						});
-					});
-				}
 
 				grunt.util.async.series(series, doneFunction);
 				break;
