@@ -67,6 +67,75 @@ module.exports = function(grunt) {
 		grunt.log.verbose.writeflags(options);
 
 		switch (phase) {
+			case "init" :
+				requiresOptions(BRANCH, DIR);
+
+				series.push(function (callback) {
+					var args = [ "clone", "--quiet", "--no-checkout" ];
+					var url = options[URL] || ".";
+					var dir = options[DIR];
+					var config;
+					var fail;
+
+					if (CONFIG in options) {
+						config = options[CONFIG];
+						fail = false;
+
+						Object.keys(config).forEach(function (key) {
+							var option = "git-dist." + key;
+							var value = grunt.option(option) || config[key];
+
+							if (value === UNDEFINED) {
+								grunt.log.error("'" + option + "' is missing.");
+								fail = true;
+							}
+							else {
+								args.push("--config", key + "=" + value);
+							}
+						});
+
+						if (fail === true) {
+							grunt.fail.warn("Required options missing.");
+						}
+					}
+
+					args.push(url, dir);
+
+					grunt.util.spawn({
+						"cmd" : "git",
+						"args" : args
+					}, function (error, result, code) {
+						callback(error, result.toString() || (code === 0 ? "Cloned '" + url + "' into '" + dir + "'" : "Unable to clone '" + url + "' into '" + dir + "'"), code);
+					});
+				});
+
+				series.push(function (callback) {
+					var args = [ "checkout", "--orphan", options[BRANCH] ];
+
+					grunt.util.spawn({
+						"cmd" : "git",
+						"args" : args,
+						"opts" : {
+							"cwd" : options[DIR]
+						}
+					}, callback);
+				});
+
+				series.push(function (callback) {
+					var args = [ "rm", "-rf", "." ];
+
+					grunt.util.spawn({
+						"cmd" : "git",
+						"args" : args,
+						"opts" : {
+							"cwd" : options[DIR]
+						}
+					}, callback);
+				});
+
+				grunt.util.async.series(series, doneFunction);
+				break;
+
 			case "clone" :
 				requiresOptions(BRANCH, DIR);
 
