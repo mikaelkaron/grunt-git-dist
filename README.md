@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/mikaelkaron/grunt-git-dist.png)](https://travis-ci.org/mikaelkaron/grunt-git-dist)
+[![NPM version](https://badge.fury.io/js/grunt-git-dist.png)](http://badge.fury.io/js/grunt-git-dist)
 
 # grunt-git-dist
 
