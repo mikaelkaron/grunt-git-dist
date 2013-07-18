@@ -15,6 +15,7 @@ module.exports = function(grunt) {
 	var BRANCH = "branch";
 	var DIR = "dir";
 	var MESSAGE = "message";
+	var TAG = "tag";
 	var CONFIG = "config";
 	var EMPTY = "empty";
 
@@ -220,13 +221,32 @@ module.exports = function(grunt) {
 				grunt.util.async.series(series, doneFunction);
 				break;
 
+			case "tag" :
+				requiresOptions(TAG, MESSAGE);
+
+				series.push(function (callback) {
+					grunt.util.spawn({
+						"cmd" : "git",
+						"args" : [ "tag", "-m", options[MESSAGE], options[TAG] ],
+						"opts" : {
+							"cwd" : options[DIR]
+						}
+					}, function (error, result, code) {
+						callback(error, result.toString() || (code === 0 ? "Tagged '" + options[TAG] + "'" : "Unable to tag '" + options[TAG] + "'"), code);
+					});
+				});
+
+				grunt.util.async.series(series, doneFunction);
+				break;
+
+
 			case "push" :
 				requiresOptions(DIR);
 
 				series.push(function (callback) {
 					grunt.util.spawn({
 						"cmd" : "git",
-						"args" : [ "push", "origin" ],
+						"args" : [ "push", "origin", "--tags", "HEAD" ],
 						"opts" : {
 							"cwd" : options[DIR]
 						}
