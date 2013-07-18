@@ -111,11 +111,9 @@ module.exports = function(grunt) {
 				});
 
 				series.push(function (callback) {
-					var args = [ "checkout", "--orphan", options[BRANCH] ];
-
 					grunt.util.spawn({
 						"cmd" : "git",
-						"args" : args,
+						"args" : [ "checkout", "--orphan", options[BRANCH] ],
 						"opts" : {
 							"cwd" : options[DIR]
 						}
@@ -123,11 +121,9 @@ module.exports = function(grunt) {
 				});
 
 				series.push(function (callback) {
-					var args = [ "rm", "-rf", "." ];
-
 					grunt.util.spawn({
 						"cmd" : "git",
-						"args" : args,
+						"args" : [ "rm", "-rf", "." ],
 						"opts" : {
 							"cwd" : options[DIR]
 						}
