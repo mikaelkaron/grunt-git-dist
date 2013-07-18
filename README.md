@@ -33,6 +33,7 @@ grunt.initConfig({
       "branch" : "build/2.x",
       "dir" : "<%= build.dist %>",
       "message" : "<%= pkg.name %> - <%= pkg.version %>",
+      "tag" : "<%= pkg.version %>",
       "config" : {
           "user.name" : "<%= pkg.author.name %>",
           "user.email" : "<%= pkg.author.email %>",
@@ -72,7 +73,7 @@ A string value that is used select what dir to clone to.
 Type: `String`  
 Default value: `undefined`
 
-A string value that is used as a commit message.
+A string value that is used as a commit/tag message.
 
 #### options.config
 Type: `Object`
@@ -80,11 +81,11 @@ Default value: `undefined`
 
 An object value that is used to configure the clone.
 
-#### options.email
+#### options.tag
 Type: `String`  
 Default value: `undefined`
 
-A string value that is used as the committer email.
+A string value that is used as the tag name.
 
 #### options.empty
 Type: `Boolean`  
@@ -93,9 +94,10 @@ Default value: `undefined`
 A boolean value that is used to allow empty commits.
 
 ## Contributing
-In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
+In lieu of a formal styleguide, take care to maintain the existing coding style. Lint and test your code using [Grunt](http://gruntjs.com/).
 
 ## Release History
+0.3.0 - Added `init` and `tag` phase.
 0.2.3 - Removed `configure` phase. Instead we configure during clone  
 0.2.2 - Added support for `empty`  
 0.2.1 - Realized that we can support URL, so added it back  

@@ -1,7 +1,7 @@
 {
   "name": "grunt-git-dist",
   "description": "Release using git",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "homepage": "https://github.com/mikaelkaron/grunt-git-dist",
   "author": {
     "name": "Mikael Karon",
@@ -25,8 +25,8 @@
     "node": ">= 0.8.0"
   },
   "devDependencies": {
-    "grunt-contrib-jshint": "~0.1.1",
-    "grunt": "~0.4.0rc7"
+    "grunt-contrib-jshint": "~0.6.0",
+    "grunt": "~0.4.1"
   },
   "keywords": [
     "gruntplugin"

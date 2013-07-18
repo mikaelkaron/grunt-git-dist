@@ -15,6 +15,7 @@ module.exports = function(grunt) {
 	var BRANCH = "branch";
 	var DIR = "dir";
 	var MESSAGE = "message";
+	var TAG = "tag";
 	var CONFIG = "config";
 	var EMPTY = "empty";
 
@@ -67,6 +68,71 @@ module.exports = function(grunt) {
 		grunt.log.verbose.writeflags(options);
 
 		switch (phase) {
+			case "init" :
+				requiresOptions(BRANCH, DIR);
+
+				series.push(function (callback) {
+					var args = [ "clone", "--quiet", "--no-checkout" ];
+					var url = options[URL] || ".";
+					var dir = options[DIR];
+					var config;
+					var fail;
+
+					if (CONFIG in options) {
+						config = options[CONFIG];
+						fail = false;
+
+						Object.keys(config).forEach(function (key) {
+							var option = "git-dist." + key;
+							var value = grunt.option(option) || config[key];
+
+							if (value === UNDEFINED) {
+								grunt.log.error("'" + option + "' is missing.");
+								fail = true;
+							}
+							else {
+								args.push("--config", key + "=" + value);
+							}
+						});
+
+						if (fail === true) {
+							grunt.fail.warn("Required options missing.");
+						}
+					}
+
+					args.push(url, dir);
+
+					grunt.util.spawn({
+						"cmd" : "git",
+						"args" : args
+					}, function (error, result, code) {
+						callback(error, result.toString() || (code === 0 ? "Cloned '" + url + "' into '" + dir + "'" : "Unable to clone '" + url + "' into '" + dir + "'"), code);
+					});
+				});
+
+				series.push(function (callback) {
+					grunt.util.spawn({
+						"cmd" : "git",
+						"args" : [ "checkout", "--orphan", options[BRANCH] ],
+						"opts" : {
+							"cwd" : options[DIR]
+						}
+					}, callback);
+				});
+
+				series.push(function (callback) {
+					grunt.util.spawn({
+						"cmd" : "git",
+						"args" : [ "rm", "-rf", "." ],
+						"opts" : {
+							"cwd" : options[DIR]
+						}
+					}, callback);
+				});
+
+				grunt.util.async.series(series, doneFunction);
+				break;
+
 			case "clone" :
 				requiresOptions(BRANCH, DIR);
 
@@ -151,13 +217,32 @@ module.exports = function(grunt) {
 				grunt.util.async.series(series, doneFunction);
 				break;
 
+			case "tag" :
+				requiresOptions(TAG, MESSAGE);
+
+				series.push(function (callback) {
+					grunt.util.spawn({
+						"cmd" : "git",
+						"args" : [ "tag", "-m", options[MESSAGE], options[TAG] ],
+						"opts" : {
+							"cwd" : options[DIR]
+						}
+					}, function (error, result, code) {
+						callback(error, result.toString() || (code === 0 ? "Tagged '" + options[TAG] + "'" : "Unable to tag '" + options[TAG] + "'"), code);
+					});
+				});
+
+				grunt.util.async.series(series, doneFunction);
+				break;
+
+
 			case "push" :
 				requiresOptions(DIR);
 
 				series.push(function (callback) {
 					grunt.util.spawn({
 						"cmd" : "git",
-						"args" : [ "push", "origin" ],
+						"args" : [ "push", "origin", "--tags", "HEAD" ],
 						"opts" : {
 							"cwd" : options[DIR]
 						}
