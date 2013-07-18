@@ -96,7 +96,7 @@ A boolean value that is used to allow empty commits.
 In lieu of a formal styleguide, take care to maintain the existing coding style. Lint and test your code using [Grunt](http://gruntjs.com/).
 
 ## Release History
-0.2.4 - Added `init` and `tag` phase.
+0.3.0 - Added `init` and `tag` phase.
 0.2.3 - Removed `configure` phase. Instead we configure during clone  
 0.2.2 - Added support for `empty`  
 0.2.1 - Realized that we can support URL, so added it back  
