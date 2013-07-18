@@ -93,7 +93,7 @@ Default value: `undefined`
 A boolean value that is used to allow empty commits.
 
 ## Contributing
-In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
+In lieu of a formal styleguide, take care to maintain the existing coding style. Lint and test your code using [Grunt](http://gruntjs.com/).
 
 ## Release History
 0.2.4 - Added `init` and `tag` phase.
