@@ -9,8 +9,13 @@
 module.exports = function(grunt) {
 	"use strict";
 
-	var UNDEFINED;
-	var ARRAY_FOREACH = Array.prototype.forEach;
+	var _ = grunt.util._;
+	var _process = require("grunt-util-process")(grunt);
+	var _options = require("grunt-util-options")(grunt);
+	var _spawn = require("grunt-util-spawn")(grunt);
+	var _required = require("grunt-util-required")(grunt);
+	var GIT_DIST = "git-dist";
+
 	var URL = "url";
 	var BRANCH = "branch";
 	var DIR = "dir";
@@ -19,12 +24,20 @@ module.exports = function(grunt) {
 	var CONFIG = "config";
 	var EMPTY = "empty";
 
-	grunt.task.registerMultiTask("git-dist", "Release using git", function (phase) {
-		var done = this.async();
-		var options = this.options();
-		var series = [];
+	var OPTIONS = {};
+	OPTIONS[URL] = ".";
 
-		function doneFunction (err, results) {
+	// Add GIT_DIST delimiters
+	grunt.template.addDelimiters(GIT_DIST, "{%", "%}");
+
+	// Register GIT_DIST task
+	grunt.task.registerMultiTask(GIT_DIST, "Release using git", function (phase) {
+		/**
+		 * @private
+		 * @param err
+		 * @param results
+		 */
+		function doneSeries(err, results) {
 			var message = results
 				.filter(function (result) {
 					return err ? result[1] !== 0 : result[1] === 0;
@@ -41,7 +54,7 @@ module.exports = function(grunt) {
 				.join("\n");
 
 			if (err) {
-				grunt.fail.warn(message);
+				grunt.warn(new Error(message));
 			}
 
 			grunt.log.ok(message);
@@ -49,60 +62,52 @@ module.exports = function(grunt) {
 			done(true);
 		}
 
-		function requiresOptions () {
-			var fail = false;
+		var me = this;
+		var name = me.name;
+		var target = me.target;
+		var series = [];
 
-			ARRAY_FOREACH.call(arguments, function (option) {
-				if (!(option in options)) {
-					grunt.log.error("'" + option + "' is missing");
-					fail = true;
-				}
-			});
+		// Start async task
+		var done = me.async();
 
-			if (fail) {
-				grunt.fail.warn("Required options missing.");
-			}
-		}
+		// Get options and process
+		var options = _process.call(_options.call(me, me.options(OPTIONS), URL, BRANCH, DIR, MESSAGE, TAG), {
+			"delimiters" : GIT_DIST
+		}, URL, BRANCH, DIR, MESSAGE, TAG);
 
 		// Log flags (if verbose)
 		grunt.log.verbose.writeflags(options);
 
 		switch (phase) {
 			case "init" :
-				requiresOptions(BRANCH, DIR);
+				_required.call(options, BRANCH, DIR);
 
 				series.push(function (callback) {
-					var args = [ "clone", "--quiet", "--no-checkout" ];
-					var url = options[URL] || ".";
+					var url = options[URL];
 					var dir = options[DIR];
-					var config;
-					var fail;
+					var args = [ "clone", "--quiet", "--no-checkout" ];
 
-					if (CONFIG in options) {
-						config = options[CONFIG];
-						fail = false;
+					_.forOwn(options[CONFIG], function (value, key) {
+						value = value
+							|| grunt.option([ name, target, key ].join("."))
+							|| grunt.option([ name, key ].join("."))
+							|| grunt.option(key);
 
-						Object.keys(config).forEach(function (key) {
-							var option = "git-dist." + key;
-							var value = grunt.option(option) || config[key];
-
-							if (value === UNDEFINED) {
-								grunt.log.error("'" + option + "' is missing.");
-								fail = true;
-							}
-							else {
-								args.push("--config", key + "=" + value);
-							}
-						});
-
-						if (fail === true) {
-							grunt.fail.warn("Required options missing.");
+						if (_.isUndefined(value)) {
+							grunt.log.error("'" + key.cyan + "' is missing");
 						}
+						else {
+							args.push("--config", key + "=" + value);
+						}
+					});
+
+					if (me.errorCount > 0) {
+						grunt.warn(new Error("Required config missing."));
 					}
 
 					args.push(url, dir);
 
-					grunt.util.spawn({
+					_spawn({
 						"cmd" : "git",
 						"args" : args
 					}, function (error, result, code) {
@@ -111,7 +116,7 @@ module.exports = function(grunt) {
 				});
 
 				series.push(function (callback) {
-					grunt.util.spawn({
+					_spawn({
 						"cmd" : "git",
 						"args" : [ "checkout", "--orphan", options[BRANCH] ],
 						"opts" : {
@@ -121,7 +126,7 @@ module.exports = function(grunt) {
 				});
 
 				series.push(function (callback) {
-					grunt.util.spawn({
+					_spawn({
 						"cmd" : "git",
 						"args" : [ "rm", "-rf", "." ],
 						"opts" : {
@@ -130,44 +135,38 @@ module.exports = function(grunt) {
 					}, callback);
 				});
 
-				grunt.util.async.series(series, doneFunction);
+				grunt.util.async.series(series, doneSeries);
 				break;
 
 			case "clone" :
-				requiresOptions(BRANCH, DIR);
+				_required.call(options, BRANCH, DIR);
 
 				series.push(function (callback) {
-					var args = [ "clone", "--quiet", "--no-checkout", "--single-branch", "--recurse-submodules", "--branch", options[BRANCH] ];
 					var url = options[URL] || ".";
 					var dir = options[DIR];
-					var config;
-					var fail;
+					var args = [ "clone", "--quiet", "--no-checkout", "--single-branch", "--recurse-submodules", "--branch", options[BRANCH] ];
 
-					if (CONFIG in options) {
-						config = options[CONFIG];
-						fail = false;
+					_.forOwn(options[CONFIG], function (value, key) {
+						value = value
+							|| grunt.option([ name, target, key ].join("."))
+							|| grunt.option([ name, key ].join("."))
+							|| grunt.option(key);
 
-						Object.keys(config).forEach(function (key) {
-							var option = "git-dist." + key;
-							var value = grunt.option(option) || config[key];
-
-							if (value === UNDEFINED) {
-								grunt.log.error("'" + option + "' is missing.");
-								fail = true;
-							}
-							else {
-								args.push("--config", key + "=" + value);
-							}
-						});
-
-						if (fail === true) {
-							grunt.fail.warn("Required options missing.");
+						if (_.isUndefined(value)) {
+							grunt.log.error("'" + key.cyan + "' is missing");
 						}
+						else {
+							args.push("--config", key + "=" + value);
+						}
+					});
+
+					if (me.errorCount > 0) {
+						grunt.warn(new Error("Required config missing."));
 					}
 
 					args.push(url, dir);
 
-					grunt.util.spawn({
+					_spawn({
 						"cmd" : "git",
 						"args" : args
 					}, function (error, result, code) {
@@ -175,14 +174,14 @@ module.exports = function(grunt) {
 					});
 				});
 
-				grunt.util.async.series(series, doneFunction);
+				grunt.util.async.series(series, doneSeries);
 				break;
 
 			case "commit" :
-				requiresOptions(DIR);
+				_required.call(options, DIR);
 
 				series.push(function (callback) {
-					grunt.util.spawn({
+					_spawn({
 						"cmd" : "git",
 						"args" : [ "add", "--all" ],
 						"opts" : {
@@ -205,7 +204,7 @@ module.exports = function(grunt) {
 						args.push("--allow-empty");
 					}
 
-					grunt.util.spawn({
+					_spawn({
 						"cmd" : "git",
 						"args" : args,
 						"opts" : {
@@ -214,14 +213,14 @@ module.exports = function(grunt) {
 					}, callback);
 				});
 
-				grunt.util.async.series(series, doneFunction);
+				grunt.util.async.series(series, doneSeries);
 				break;
 
 			case "tag" :
-				requiresOptions(TAG, MESSAGE);
+				_required.call(options, TAG, MESSAGE);
 
 				series.push(function (callback) {
-					grunt.util.spawn({
+					_spawn({
 						"cmd" : "git",
 						"args" : [ "tag", "-m", options[MESSAGE], options[TAG] ],
 						"opts" : {
@@ -232,15 +231,15 @@ module.exports = function(grunt) {
 					});
 				});
 
-				grunt.util.async.series(series, doneFunction);
+				grunt.util.async.series(series, doneSeries);
 				break;
 
 
 			case "push" :
-				requiresOptions(DIR);
+				_required.call(options, DIR);
 
 				series.push(function (callback) {
-					grunt.util.spawn({
+					_spawn({
 						"cmd" : "git",
 						"args" : [ "push", "origin", "--tags", "HEAD" ],
 						"opts" : {
@@ -249,11 +248,11 @@ module.exports = function(grunt) {
 					}, callback);
 				});
 
-				grunt.util.async.series(series, doneFunction);
+				grunt.util.async.series(series, doneSeries);
 				break;
 
 			default :
-				grunt.fail.warn("Unknown phase '" + phase + "'");
+				grunt.warn(new Error("Unknown phase '" + phase + "'"));
 		}
 	});
 };
