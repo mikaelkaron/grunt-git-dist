@@ -188,7 +188,7 @@ module.exports = function(grunt) {
 						args = args.concat(options, "--", options[PATHS]);
 					}
 					else {
-						args.push("--all")
+						args.push("--all");
 					}
 
 					_spawn({
