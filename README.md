@@ -32,6 +32,7 @@ grunt.initConfig({
       "url" : "<%= pkg.repository.url %>",
       "branch" : "build/2.x",
       "dir" : "<%= build.dist %>",
+      "paths" : [ "path/to/dir", "path/to/file.ext" ],
       "message" : "<%= pkg.name %> - <%= pkg.version %>",
       "tag" : "<%= pkg.version %>",
       "config" : {
@@ -67,7 +68,13 @@ A string value that is used to select what branch to clone.
 Type: `String`  
 Default value: `undefined`
 
-A string value that is used select what dir to clone to.
+A string value that is used to select what dir to clone to.
+
+#### options.paths
+Type: `Array`  
+Default value: `undefined`
+
+An array value that is used to select wich files to add.
 
 #### options.message
 Type: `String`  
@@ -98,6 +105,7 @@ In lieu of a formal styleguide, take care to maintain the existing coding style.
 
 ## Release History
 
+0.4.0 - Added `add` phase. Regular add removed from `commit` phase  
 0.3.1 - Added standardized support for CLI parameters  
 0.3.0 - Added `init` and `tag` phase.
 0.2.3 - Removed `configure` phase. Instead we configure during clone  
