@@ -19,6 +19,7 @@ module.exports = function(grunt) {
 	var URL = "url";
 	var BRANCH = "branch";
 	var DIR = "dir";
+	var PATHS = "paths";
 	var MESSAGE = "message";
 	var TAG = "tag";
 	var CONFIG = "config";
@@ -177,18 +178,37 @@ module.exports = function(grunt) {
 				grunt.util.async.series(series, doneSeries);
 				break;
 
-			case "commit" :
+			case "add" :
 				_required.call(options, DIR);
 
 				series.push(function (callback) {
+					var args = [ "add" ];
+
+					if (PATHS in options) {
+						args = args.concat(options, "--", options[PATHS]);
+					}
+					else {
+						args.push("--all");
+					}
+
 					_spawn({
 						"cmd" : "git",
-						"args" : [ "add", "--all" ],
+						"args" : args,
 						"opts" : {
 							"cwd" : options[DIR]
 						}
-					}, callback);
+					}, function (error, result, code) {
+						var files = (options[PATHS] || [ "file(s)" ]).join(",");
+
+						callback(error, result.toString() || (code === 0 ? "Added " + files.cyan : "Unable to add '" + files.cyan), code);
+					});
 				});
+
+				grunt.util.async.series(series, doneSeries);
+				break;
+
+			case "commit" :
+				_required.call(options, DIR);
 
 				series.push(function (callback) {
 					var args = [ "commit", "--no-edit" ];
