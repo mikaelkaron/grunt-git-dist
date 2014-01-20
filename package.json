@@ -27,7 +27,8 @@
   "dependencies": {
     "grunt-util-required": "~0.0.1",
     "grunt-util-spawn": "~0.0.2",
-    "grunt-util-process": "~0.0.1"
+    "grunt-util-process": "~0.0.1",
+    "grunt-util-options": "~0.0.2"
   },
   "devDependencies": {
     "grunt-contrib-jshint": "~0.6.0",
